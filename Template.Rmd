@@ -1,0 +1,25 @@
+---
+Encoding: UTF-8 Unicode
+title: "Desafio"
+author: 
+- name: "Igor Galhano - Turma 22.1"
+- name: "Matheus Da Silva-Martins - Turma 22.1"
+- name: "Reuben Solomon Katz - Turma 22.1"
+date: '2019-08-09'
+output:
+  html_document:
+  theme: sandstone
+df_print: paged
+number_sections: FALSE    
+---
+
+> Título
+
+
+## Enunciado do problema
+
+## Estratégia da solução 
+
+## Resultados e Análises
+
+## Referências

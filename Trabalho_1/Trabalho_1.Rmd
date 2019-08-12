@@ -1,0 +1,212 @@
+---
+Encoding: UTF-8 Unicode
+title: "Desafio"
+author: 
+- name: "Igor Galhano - Turma 22.1"
+- name: "Matheus Da Silva-Martins - Turma 22.1"
+- name: "Reuben Solomon Katz - Turma 22.1"
+date: '2019-08-09'
+output:
+  html_document:
+  theme: sandstone
+df_print: paged
+number_sections: FALSE    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE)
+```
+> Estimando o número $e$ via Simulação de Monte Carlo
+
+
+## Enunciado do problema
+
+----
+  
+  Sem dúvida, os dois números transcedentais mais importantes são $\pi$ e o [número de Euler,  e](https://en.wikipedia.org/wiki/E_(mathematical_constant)). Existem várias maneiras de calcular os valores de tais constantes, sendo as mais famosas baseadas em expansões em séries de Taylor:
+  
+$$
+  \frac{\pi}{4} =  1 - \frac{1}{3} + \frac{1}{5} - \frac{1}{7} + \frac{1}{9} - \ldots
+$$
+  
+$$
+  e = \frac{1}{0!} + \frac{1}{1!} + \frac{1}{2!} + \frac{1}{3!} + \ldots 
+$$
+  
+É possível estimar o valor da constante $\pi$ através de um experimento aleatório conhecido como o problema de agulha de buffon, o que pode ser implementado em uma simulação de Monte Carlo. 
+
+Aqui, iremos estimar de maneira estocástica o número $e$.
+
+## Estratégia da solução 
+
+----
+
+Os seguintes passos serão tomados para resolução do problema:
+  
+* Dividir o intervalo real [0,1] em N subintervalos de mesmo comprimento;
+* Gerar N números aleatórios uniformemente distribuídos entre 0 e 1;
+* Alocar cada um dos números aleatórios gerados ao subintervalo a que pertence;
+* Contar a quantidade (Z) de subintervalos que não contém nenhum dos números aleatórios gerados;
+* A razão Z/N estima P[0], pois corresponde à frequência relativa de que nenhum dardo acerte um dado segmento da linha. Portanto, podemos estimar a constante e fazendo:
+
+$$
+  e = \frac{N}{Z} 
+$$
+
+### Passo 1: Dividir em um intervalo real
+
+#### Colcoar o número de dardos
+
+```{r}
+
+rm(list=ls())
+
+n <- 1000
+
+```
+
+### Passo 2: Criando vetor com os números aleatórios e o vetor de 'N' intervalos
+
+#### Criando vetor de números aleatórios
+
+```{r}
+
+darts <- c(n)
+
+darts <- runif(n, min=0, max=1)
+
+```
+
+#### Criando vetor com os 'N' intervalos inicialmente todos com zero acertos
+
+```{r}
+
+hits <- numeric(n)
+
+```
+
+### Passo 3: Encontrando a quantidade de dardos em cada intervalo
+
+```{r}
+
+for (i in 1:n) 
+{
+  for(j in 1:n){
+    if ((darts[i]<=(j/n))&(darts[i]>(j-1)/n)){
+        hits[j] = hits[j] + 1
+    }
+  }
+}
+
+```
+
+### Passo 4: Calculando quantos intervalos vazios(Z) existem no vetor de intervalos e encontrando o valor de e
+
+```{r}
+
+z <- 0
+
+for (hit in hits) 
+{
+  if(hit == 0){
+    z <- z +1
+  }
+}
+
+```
+
+### Passo 5: Encontrando a razão Z/N
+
+```{r}
+
+e <- n/z
+
+```
+
+
+### Fazendo repetições [(método de monte carlos)](https://pt.wikipedia.org/wiki/M%C3%A9todo_de_Monte_Carlo) para obter amostragens aleatórias e plotando os resultados
+
+Para utilizar o método MMC basta fazer o mesmo processo descrito acima por um número determinado de vezes. A partir de agora, não haverá comentários no códigos, pelo fato de já ter tido comentário acima.
+
+```{r}
+
+rm(list=ls())
+
+n <- c(10, 100)
+
+nrep <- c(5, 50)
+
+
+
+for(k in nrep){
+  for(m in n){
+    
+    results <- numeric(k)
+    
+    for(rep in 1:k){
+  
+      darts <- c(m)
+      
+      darts
+      
+      darts <- runif(m, min=0, max=1)
+      
+      hits <- numeric(m)
+      
+      for (i in 1:m) 
+      {
+        for(j in 1:m){
+          if ((darts[i]<=(j/m))&(darts[i]>(j-1)/m)){
+              hits[j] = hits[j] + 1
+          }
+        }
+      }
+      
+      z <- 0
+      
+      for (p in 1:m) 
+      {
+        if(hits[p] == 0){
+          z <- z +1
+        }
+      }
+      
+      results[rep] = m/z
+    }
+    plot(
+     results, 
+     type="b", 
+     pch = "*",
+     xlab="Número do experimento", 
+     ylab="Valor de 'e' estimado",
+     main = "Resultados"
+    )
+    abline(h = exp(1), col=2 , lty="dashed") # adiciona linha vermelha
+  
+    hist(
+         results,
+         xlab="Valor de 'e' estimado", 
+         ylab="Quantidade de valores",
+         freq = FALSE, 
+         col = "gray", 
+         main = "Histograma")
+    abline(v = exp(1), col = "red", lty = "dashed", lwd = 2) # adiciona linha vermelha
+    # com valor real de 'e'
+    
+    abline(v = c(quantile(results, probs=c(0.025, 0.975))), 
+           col = "blue", lty = "dashed") # 95% das estimativas de 'e' encontram-se entre os valores representados pelas linhas azuis
+  }
+}
+
+```
+
+## Resultados e Análises
+
+* O que acontece com a distribuição dos valores estimados de e se aumentarmos o número de dardos lançados (micro-experimento), mantendo o número de replicações do (macro) experimento constante?
+
+  + Diminui a precisão
+  + A acurácia diminui
+
+* O que acontece com a distribuição dos valores estimados de e se mantivermos constante o número de dardos lançados (micro-experimento) e aumentarmos o número de replicações do (macro) experimento constante?
+  + Diminui a precisão
+  + A acurácia aumenta
