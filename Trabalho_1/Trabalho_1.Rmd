@@ -71,8 +71,6 @@ n <- 1000
 
 ```{r}
 
-darts <- c(n)
-
 darts <- runif(n, min=0, max=1)
 
 ```
@@ -91,11 +89,8 @@ hits <- numeric(n)
 
 for (i in 1:n) 
 {
-  for(j in 1:n){
-    if ((darts[i]<=(j/n))&(darts[i]>(j-1)/n)){
-        hits[j] = hits[j] + 1
-    }
-  }
+  intervalo = as.integer(darts[i]*n)
+  hits[intervalo+1] = hits[intervalo+1] +1
 }
 
 ```
@@ -132,9 +127,9 @@ Para utilizar o método MMC basta fazer o mesmo processo descrito acima por um n
 
 rm(list=ls())
 
-n <- c(10, 100)
+n <- c(10, 100, 1000, 10000)
 
-nrep <- c(5, 50)
+nrep <- c(5, 50, 500, 5000)
 
 
 
@@ -144,23 +139,14 @@ for(k in nrep){
     results <- numeric(k)
     
     for(rep in 1:k){
-  
-      darts <- c(m)
-      
-      darts
       
       darts <- runif(m, min=0, max=1)
       
       hits <- numeric(m)
       
-      for (i in 1:m) 
-      {
-        for(j in 1:m){
-          if ((darts[i]<=(j/m))&(darts[i]>(j-1)/m)){
-              hits[j] = hits[j] + 1
-          }
-        }
-      }
+      intervalo = as.integer(darts*m)
+      
+      hits[intervalo] = hits[intervalo] +1
       
       z <- 0
       
@@ -204,9 +190,8 @@ for(k in nrep){
 
 * O que acontece com a distribuição dos valores estimados de e se aumentarmos o número de dardos lançados (micro-experimento), mantendo o número de replicações do (macro) experimento constante?
 
-  + Diminui a precisão
-  + A acurácia diminui
+  Ao aumentar o número de dardos, aumenta-se a precisão dos resultados para cada micro-experimento, conforme comprovado pelos resultados. Isto ocore pois, quanto maior o número de eventos aleatórios, mais próxima a distribuição dos resultados fica em relação às respectivas probabilidades do evento.
 
 * O que acontece com a distribuição dos valores estimados de e se mantivermos constante o número de dardos lançados (micro-experimento) e aumentarmos o número de replicações do (macro) experimento constante?
-  + Diminui a precisão
-  + A acurácia aumenta
+  
+  Quanto maior o número o número de repetições do macro-experimento, mais se observa o afunilamento dos resultados no histograma em torno do valor real que se deseja estimar. Dessa forma, há um aumento de confiabilidade do valor estimado pelo pico do histograma.
