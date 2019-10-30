@@ -1,0 +1,114 @@
+---
+title: "Questão 1"
+author: "Reuben Solomon Katz"
+date: "01/11/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+library("tinytex")
+
+```
+
+# Gerando as amostras
+
+```{r amostras}
+
+#Gerando as mil amostras de tamanho 31
+
+y <- c()
+
+for(i in 1:1000)
+{
+  x <- rnorm(31, mean=15, sd=5)
+  y <- c(y,x)  
+}
+
+```
+# Respostas MOM
+
+```{r MOM}
+
+# Método dos momentos é uma maneira de estimar os parâmetros de uma população
+# Por meio de n equações, estima-se n parâmetros por meio das esperanças das potências
+
+##Perceba que, para esse problema, a média é a média aritimétrica da amostra e as variâncias são as
+##variâncias das amostras:
+
+means_mom <- c()
+vars_mom <- c()
+
+for(i in 1:1000)
+{
+  begining <- 1 + 31*(i-1)
+  end <- 31 + 31*(i-1)
+  means_mom <-c(means_mom,median(y[begining:end]))
+  vars_mom <- c(vars_mom, var(y[begining:end]))
+}
+
+```
+
+## Plotagens MOM
+
+```{r plots_mom}
+
+density_vars_mom <- density(vars_mom)
+
+density_means_mom <- density(means_mom)
+
+plot(
+  density_vars_mom,
+  type="l",
+  main = "Plot Variances",
+  sub="Método de Momentos",
+  ) + abline(
+    v=25,
+    col="red"
+  )
+
+
+plot(
+  density_means_mom,
+  type="l",
+  main = "Plot Means",
+  sub="Método de Momentos",
+) + abline(
+  v=15,
+  col="red"
+  )
+
+```
+
+## Exercícios 3 e 4
+
+Perceba que as respostas dos exercícios 3 e 4 são os mesmos dos exercícios 1 e 2, isso se deve ao fato de que a resposta é a mesma para ambos os casos
+
+
+## Demonstração matemática para as respostas
+
+### Método dos momentos
+
+$$\alpha_1 (\mu,\sigma^2) =  \mu = \bar{X} = m_1$$
+
+$$\alpha_2(\mu,\sigma^2) = \sigma^2 + \mu^2 = \frac{\sum_{i=1}^{n} (X_i)^2}{n} = m_2$$
+
+Resolvendo, obtemos:
+
+$$\tilde{\mu} = \bar{X}$$
+$$\tilde{\sigma^2} = \frac{\sum_{i=1}^{n} (X_i)^2 - \bar{X}^2}{n} = S^2$$
+
+### Método da Máxima Verossimilhança
+
+$$L(\mu, \sigma^2) = \prod_{i=1}^{n} N(X_i, \mu, \sigma^2) = \frac{1}{\mu\sqrt{2\pi}}e^{-\frac{1}{2\sigma^2}\sum_{i=1}^{n}(X_i-\mu)^2}$$
+Tomando as derivadas pariciais do logaritmo com respeito a $\mu$ e $\sigma^2$:
+
+$$\frac{\partial{L}}{\partial{\mu}} = \frac{1}{\sigma^2}\sum(X_i - \mu)=0$$
+$$\frac{\partial{L}}{\partial{\sigma^2}} = \frac{n}{2\sigma^2}+\frac{1}{2\sigma^4}\sum(X_i-\mu)^2=0$$
+
+O que resulta em:
+
+$$\tilde{\mu} = \frac{\sum X_i}{n}$$
+$$\tilde{\sigma^2} = \frac{\sum (X_i - \bar{X})^2}{n} = S^2$$
+O que coincide com a resposta anterior.

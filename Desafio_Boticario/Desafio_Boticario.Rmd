@@ -1,0 +1,846 @@
+---
+title: "Desafio Boticário"
+author: "Reuben Solomon Katz T22.1"
+date: "22/11/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+library(lubridate)
+library(ggplot2)
+library(scales)
+library(tinytex)
+library(knitr)
+
+```
+# Introdução
+
+O [boticário](https://en.wikipedia.org/wiki/O_Botic%C3%A1rio) é uma das maiores empresas cosméticas no Brasil. Possuindo mais de 4000 lojas no mundo inteiro. O Boticário faz parte de uma empresa denominada [Grupo Boticário](https://pt.wikipedia.org/wiki/Grupo_Botic%C3%A1rio), o qual possui 5 grandes marcas:
+
+* O Boticário;
+* Eudora;
+* Quem disse, Berenice?;
+* The Beauty Box;
+* Vult Cosméticos;
+
+Esse grupo propôs um desafio de análise de dados, para assim encontrar informações relevantes acerca de suas vendas.
+
+# Solução proposta
+
+## Encontrando Variáveis Úteis
+
+```{r dados_utilizados}
+  
+  myData <- read.csv(
+    file="/home/groot/Estatistica_ITA/Desafio_Boticario/DESAFIO_ITA.csv",
+    header=TRUE,
+    sep=";"
+    )
+
+  myData$DIA = ymd(myData$DIA) ##transformar para o formato dia
+
+  ###colocando os dados por mês e por semana
+  myData$MES <- as.Date(cut(myData$DIA,
+                            breaks = "month"))
+  myData$SEMANA <- as.Date(cut(myData$DIA,
+                               breaks = "week",
+                               start.on.monday = FALSE)) # a semana irá começar na segunda
+
+  ###pegar dados por região
+  myDataNordeste <-myData[myData$REGIAO == "Região Nordeste",]
+  myDataSudeste <- myData[myData$REGIAO == "Região Sudeste",]
+  myDataSul <- myData[myData$REGIAO == "Região Sul",]
+  
+  myDataNordeste_0 <- myDataNordeste[myDataNordeste$COD_CATEGORIA == "0",]
+
+  myDataNordeste_1 <- myDataNordeste[myDataNordeste$COD_CATEGORIA == "1",]
+
+  myDataNordeste_2 <- myDataNordeste[myDataNordeste$COD_CATEGORIA == "2",]
+
+  myDataSudeste_0 <- myDataSudeste[myDataSudeste$COD_CATEGORIA == "0",]
+
+  myDataSudeste_1 <- myDataSudeste[myDataSudeste$COD_CATEGORIA == "1",]
+
+  myDataSudeste_2 <- myDataSudeste[myDataSudeste$COD_CATEGORIA == "2",]
+
+  myDataSul_0 <- myDataSudeste[myDataSul$COD_CATEGORIA == "0",]
+
+  myDataSul_1 <- myDataSudeste[myDataSul$COD_CATEGORIA == "1",]
+
+  myDataSul_2 <- myDataSudeste[myDataSul$COD_CATEGORIA == "2",]
+  
+  totalNordeste = sum(myDataNordeste$VOLUME)
+  
+  totalSudeste = sum(myDataSudeste$VOLUME)
+  
+  totalSul = sum(myDataSul$VOLUME)
+  
+  totalNordeste_0 = sum(myDataNordeste_0$VOLUME) 
+  
+  totalNordeste_1 = sum(myDataNordeste_1$VOLUME)
+  
+  totalNordeste_2 = sum(myDataNordeste_2$VOLUME)
+  
+  totalSudeste_0 = sum(myDataSudeste_0$VOLUME)
+  
+  totalSudeste_1 = sum(myDataSudeste_1$VOLUME)
+  
+  totalSudeste_2 = sum(myDataSudeste_2$VOLUME)
+  
+  totalSul_0 = sum(myDataSul_0$VOLUME)
+  
+  totalSul_1 = sum(myDataSul_1$VOLUME)
+  
+  totalSul_2 = sum(myDataSul_2$VOLUME)
+  
+  estados = levels(droplevels(unique(myData$REGIAO.1)))
+
+  totalEstados = length(estados)
+  
+  lojas = sort(unique(myData$COD_LOJA))
+
+  totalLojas = length(lojas)
+  
+  materiais <- sort(unique(myData$COD_MATERIAL))
+
+  tamanhoMateriais <- length(materiais)
+  
+  categorias <- sort(unique(myData$COD_CATEGORIA))
+  
+  tamanhoCategorias <- length(categorias)
+
+```
+
+## Análise da distribuição da frequência
+
+```{r histograma_inicial}
+
+  hist(myData$VOLUME)
+
+```
+
+## Analisando o Resultado temporal dos produtos vendidos por região
+
+```{r resultado_temporal_produtos_regiao}
+
+#Separar por mês, região, produto
+
+##Analisar cada em um nível regional e mensal
+
+ggplot(data = myDataNordeste,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+
+  labs( title="Quantidade total de produtos vendidos",
+        subtitle="Região Nordeste"
+  ) +
+  
+  xlab("ano-mes") + 
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataSul,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade total de produtos vendidos",
+        subtitle="Região Sul"
+  ) +
+  
+  xlab("ano-mes") + 
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataSudeste,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade total de produtos vendidos",
+        subtitle="Região Sudeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+  quantidadeProdutoPorEstados = c(4*totalEstados)
+
+  i = 1
+  
+  for(estado in estados)
+  {
+    dadosEstado = myData[myData$"REGIAO.1" == estado,]
+    quantidadeProdutoPorEstados[i] = sum(dadosEstado$VOLUME)
+    quantidadeProdutoPorEstados[i+1] = sum(dadosEstado[dadosEstado$COD_CATEGORIA == "0",]$VOLUME)
+    quantidadeProdutoPorEstados[i+2] = sum(dadosEstado[dadosEstado$COD_CATEGORIA == "1",]$VOLUME)
+    quantidadeProdutoPorEstados[i+3] = sum(dadosEstado[dadosEstado$COD_CATEGORIA == "2",]$VOLUME)
+    i = i+4
+  }
+  
+  tabelaVolumeEstadoPorProduto <- matrix(quantidadeProdutoPorEstados,ncol=4,byrow=TRUE)
+  colnames(tabelaVolumeEstadoPorProduto) <- c("Total","Produto 0", "Produto 1", "Produto 2")
+  rownames(tabelaVolumeEstadoPorProduto) <- estados
+  tabelaVolumeEstadoPorProduto <- as.table(tabelaVolumeEstadoPorProduto)
+  kable(tabelaVolumeEstadoPorProduto)
+```
+
+Perceba que estes histogramas são formas de mostrar quais produtos tem mais sucesso por região. Isso é uma forma de descobrir a **melhor forma distribuir o estoque** de produtos. 
+Além disso, é uma forma de fazer previsão temporal de quanto será vendido. Perceba que no último mês de cada histograma, houve uma **queda brusca** em relação ao ano passado. Isso, para fim de análise, será considerado como **erro do dataset**. Apesar de o grupo boticário ter comprado a Vult por volta dessa época, a quedra brusca não pode ser justificada apenas por esse fator.
+
+
+## Analisando um Resultado de Produto Vendidos Por Região, Loja e Tipo de Produto
+
+```{r analise_loja_regiao_produto}
+
+##Analisar de maneira regional, mensal e por produto
+
+###Nordeste
+
+myDataNordeste_0 <- myDataNordeste[myDataNordeste$COD_CATEGORIA == "0",]
+
+myDataNordeste_1 <- myDataNordeste[myDataNordeste$COD_CATEGORIA == "1",]
+
+myDataNordeste_2 <- myDataNordeste[myDataNordeste$COD_CATEGORIA == "2",]
+
+ggplot(data = myDataNordeste_0,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 0",
+        subtitle="Região Nordeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataNordeste_1,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 1",
+        subtitle="Região Nordeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataNordeste_2,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 2",
+        subtitle="Região Nordeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+###Sudeste
+
+myDataSudeste_0 <- myDataSudeste[myDataSudeste$COD_CATEGORIA == "0",]
+
+myDataSudeste_1 <- myDataSudeste[myDataSudeste$COD_CATEGORIA == "1",]
+
+myDataSudeste_2 <- myDataSudeste[myDataSudeste$COD_CATEGORIA == "2",]
+
+ggplot(data = myDataSudeste_0,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 0",
+        subtitle="Região Sudeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataSudeste_1,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 1",
+        subtitle="Região Sudeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataSudeste_2,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 2",
+        subtitle="Região Sudeste"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+###Sul
+
+myDataSul_0 <- myDataSudeste[myDataSul$COD_CATEGORIA == "0",]
+
+myDataSul_1 <- myDataSudeste[myDataSul$COD_CATEGORIA == "1",]
+
+myDataSul_2 <- myDataSudeste[myDataSul$COD_CATEGORIA == "2",]
+
+ggplot(data = myDataSul_0,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 0",
+        subtitle="Região Sul"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataSul_1,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 1",
+        subtitle="Região Sul"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ggplot(data = myDataSul_2,
+       aes(MES, VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações mensais
+               geom = "bar") + 
+  scale_x_date(
+    labels = date_format("%Y-%m"),
+    breaks = "1 month") + # colocar um "eixo-x" customizado
+  
+  labs( title="Quantidade vendidos produto 2",
+        subtitle="Região Sul"
+  ) +
+  
+  xlab("ano-mes") +
+  
+  ylab("Quantidade vendida")
+
+ 
+```
+
+Assim como demonstrando no tópico anterior, vemos aqui a melhor forma de distribuir cada tipo diferente de produto por região.
+
+### Análise por produto, loja e região
+
+```{r produto_regiao_loja}
+#Separar por loja, região e produto
+
+##Analisar as lojas que vendem mais cada produto
+
+###Sul
+
+ggplot(data = myDataSul_0,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sul",
+        subtitle="Produto 0"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul_0$COD_LOJA), breaks = myDataSul_0$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSul_1,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sul",
+        subtitle="Produto 1"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul_1$COD_LOJA), breaks = myDataSul_1$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSul_2,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sul",
+        subtitle="Produto 2"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul_2$COD_LOJA), breaks = myDataSul_2$COD_LOJA) +
+  
+  geom_point()
+
+###Nordeste
+
+ggplot(data = myDataNordeste_0,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Nordeste",
+        subtitle="Produto 0"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste_0$COD_LOJA), breaks = myDataNordeste_0$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataNordeste_1,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Nordeste",
+        subtitle="Produto 1"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste_1$COD_LOJA), breaks = myDataNordeste_1$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataNordeste_2,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Nordeste",
+        subtitle="Produto 2"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste_2$COD_LOJA), breaks = myDataNordeste_2$COD_LOJA) +
+  
+  geom_point()
+
+###Sudeste
+
+ggplot(data = myDataSudeste_0,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sudeste",
+        subtitle="Produto 0"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste_0$COD_LOJA), breaks = myDataSudeste_0$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSudeste_1,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sudeste",
+        subtitle="Produto 1"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste_1$COD_LOJA), breaks = myDataSudeste_1$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSudeste_2,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sudeste",
+        subtitle="Produto 2"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste_2$COD_LOJA), breaks = myDataSudeste_2$COD_LOJA) +
+  
+  geom_point()
+
+
+```
+
+Esses dados mostram quais são as melhores lojas de cada região. Perceba que esse dado mostra quais são **as lojas que podemos utilizar de modelo para aplicar em outras lojas** (caso viável), além de também mostrar a forma de distribuição do estoque dentro da região.
+
+### Anáĺise por Loja e Produto
+
+```{r loja_produto}
+
+#Separar por loja, região e produto
+
+##Analisar as lojas que vendem mais cada produto
+
+###Sul
+
+ggplot(data = myDataSul_0,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sul",
+        subtitle="Produto 0"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul_0$COD_LOJA), breaks = myDataSul_0$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSul_1,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sul",
+        subtitle="Produto 1"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul_1$COD_LOJA), breaks = myDataSul_1$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSul_2,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sul",
+        subtitle="Produto 2"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul_2$COD_LOJA), breaks = myDataSul_2$COD_LOJA) +
+  
+  geom_point()
+
+###Nordeste
+
+ggplot(data = myDataNordeste_0,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Nordeste",
+        subtitle="Produto 0"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste_0$COD_LOJA), breaks = myDataNordeste_0$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataNordeste_1,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Nordeste",
+        subtitle="Produto 1"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste_1$COD_LOJA), breaks = myDataNordeste_1$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataNordeste_2,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Nordeste",
+        subtitle="Produto 2"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste_2$COD_LOJA), breaks = myDataNordeste_2$COD_LOJA) +
+  
+  geom_point()
+
+###Sudeste
+
+ggplot(data = myDataSudeste_0,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sudeste",
+        subtitle="Produto 0"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste_0$COD_LOJA), breaks = myDataSudeste_0$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSudeste_1,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sudeste",
+        subtitle="Produto 1"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste_1$COD_LOJA), breaks = myDataSudeste_1$COD_LOJA) +
+  
+  geom_point()
+
+ggplot(data = myDataSudeste_2,
+       aes(x=COD_LOJA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Quantidade vendidos na Região Sudeste",
+        subtitle="Produto 2"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste_2$COD_LOJA), breaks = myDataSudeste_2$COD_LOJA) +
+  
+  geom_point()
+
+  lojas = sort(unique(myData$COD_LOJA))
+  
+  totalLojas = length(lojas)
+  
+  quantidadeProdutoPorLoja = c(4*totalEstados)
+  
+  i = 1
+  
+  for(loja in lojas)
+  {
+    dadosLoja = myData[myData$COD_LOJA == loja,]
+    quantidadeProdutoPorLoja[i] = sum(dadosLoja$VOLUME)
+    quantidadeProdutoPorLoja[i+1] = sum(dadosLoja[dadosLoja$COD_CATEGORIA == 0,]$VOLUME)
+    quantidadeProdutoPorLoja[i+2] = sum(dadosLoja[dadosLoja$COD_CATEGORIA == 1,]$VOLUME)
+    quantidadeProdutoPorLoja[i+3] = sum(dadosLoja[dadosLoja$COD_CATEGORIA == 2,]$VOLUME)
+    i = i+4
+  }
+  
+  tabelaVolumeLojaPorProduto <- matrix(quantidadeProdutoPorLoja,ncol=4,byrow=TRUE)
+  colnames(tabelaVolumeLojaPorProduto) <- c("Total","Produto 0", "Produto 1", "Produto 2")
+  rownames(tabelaVolumeLojaPorProduto) <- lojas
+  tabelaVolumeLojaPorProduto <- as.table(tabelaVolumeLojaPorProduto)
+  kable(tabelaVolumeLojaPorProduto)
+```
+
+
+Perceba que esse histograma mostra **as melhores lojas** na venda de determinados produtos. Isso mostra quais lojas devem ser analisadas para entender consumidores da loja ou até forma de venda para assim, caso possível, replicar o modelo em outras lojas.
+
+## Análise do produto vendido por região
+
+```{r produto_regiao}
+##Analisar marca de cada produto mais vendido por região
+
+ggplot(data = myDataSudeste,
+       aes(x=COD_MARCA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Vendas por Marca",
+        subtitle="Região Sudeste"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSudeste$COD_MARCA), breaks = myDataSudeste$COD_MARCA) +
+  
+  geom_point()
+
+ggplot(data = myDataSul,
+       aes(x=COD_MARCA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Vendas por Marca",
+        subtitle="Região Sul"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataSul$COD_MARCA), breaks = myDataSul$COD_MARCA) +
+  
+  geom_point()
+
+ggplot(data = myDataNordeste,
+       aes(x=COD_MARCA, y=VOLUME)) +
+  stat_summary(fun.y = sum, # somar as observações para cada produto
+               geom = "bar") + 
+  labs( title="Vendas por Marca",
+        subtitle="Região Nordeste"
+  ) +
+  
+  ylab("Quantidade vendida") + 
+  
+  scale_x_continuous("Código Loja", labels = as.character(myDataNordeste$COD_MARCA), breaks = myDataNordeste$COD_MARCA) +
+  
+  geom_point()
+
+  tabelaVolumeRegiaoPorProduto = matrix(c(totalNordeste, totalNordeste_0, totalNordeste_1, totalNordeste_2, totalSudeste, totalSudeste_0, totalSudeste_1, totalSudeste_2, totalSul, totalSul_0, totalSul_1, totalSul_2),ncol=4,byrow=TRUE)
+  colnames(tabelaVolumeRegiaoPorProduto) <- c("Total","Produto 0","Produto 1","Produto 2")
+  rownames(tabelaVolumeRegiaoPorProduto) <- c("Nordeste","Sudeste","Sul")
+  tabelaVolumeRegiaoPorProduto <- as.table(tabelaVolumeRegiaoPorProduto)
+  kable(tabelaVolumeRegiaoPorProduto)
+```
+
+Esses histogramas mostram a **melhor forma de distribuir o estoque por região**.
+
+## Análise dos dados por loja e estado
+
+```{r loja_estado}
+  
+  
+  quantidadeVendidaEstadoLoja <- c(length= totalEstados*totalLojas)
+  
+  i <- 1
+  
+  for(loja in lojas)
+  {
+    dadosLoja <- myData[myData$COD_LOJA == loja,]
+    
+    for(estado in estados)
+    {
+      
+      dadosLojaEstado <- dadosLoja[myData$"REGIAO.1" == estado,]
+      
+      quantidadeVendidaEstadoLoja[i] <- sum(dadosLojaEstado$VOLUME,na.rm=T)
+      i = i+1 
+    }
+  }
+  
+  tabelaVolumeLojaPorEstado <- matrix(quantidadeVendidaEstadoLoja,ncol=totalLojas,byrow=TRUE)
+  colnames(tabelaVolumeLojaPorEstado) <- lojas
+  rownames(tabelaVolumeLojaPorEstado) <- estados
+  tabelaVolumeLojaPorEstado <- as.table(tabelaVolumeLojaPorEstado)
+  kable(tabelaVolumeLojaPorEstado)
+```
+
+Perceba que esses dado mostram uma forma de inferir quais são as lojas que estão melhores em venda para cada estado. Isso mostra que, após analise das melhores lojas, podemos verificar a **melhor forma de implementar um modelo de vendas por estado**.
+
+
+## Análise da quantidade vendida por materiais
+
+```{r quantidade_produto_materiais}
+
+  quantidadeVendidaMateriais <- vector(length=tamanhoMateriais)
+  
+  i = 1
+  
+  for(material in materiais)
+  {
+    
+    dadosMateriais <- myData[myData$COD_MATERIAL==material,]
+    
+    quantidadeVendidaMateriais[i] <- sum(dadosMateriais$VOLUME)
+    
+    i = i + 1
+  }
+  
+  tabelaVolumeMateriais <- matrix(quantidadeVendidaMateriais,ncol=1,byrow=TRUE)
+  colnames(tabelaVolumeMateriais) <- "Volume"
+  rownames(tabelaVolumeMateriais) <- materiais
+  tabelaVolumeMateriais <- as.table(tabelaVolumeMateriais)
+  kable(tabelaVolumeMateriais)
+```
+
+Essa tabela mostra uma forma de analisar quais são os materiais mais vendidos. Sendo assim, esses dados mostram aa melhor formas de de decidir quais são os **materiais que são melhores para serem investidos ou comprados**.
+
+## Analise da relação Entre Vendas de Material por Categoria
+
+```{r material_categorias}
+  
+  quantidadeVendidaMaterialCategoria <- vector(length = tamanhoCategorias*tamanhoMateriais)
+
+  i <- 1
+  
+  for(material in materiais)
+  {
+    dadosMaterial <- myData[myData$COD_MATERIAL == material,]
+    
+    for(categoria in categorias)
+    {
+      
+      dadosMaterialCategoria <- dadosMaterial[myData$COD_CATEGORIA == categoria,]
+      
+      quantidadeVendidaMaterialCategoria[i] <- sum(dadosMaterialCategoria$VOLUME,na.rm=T)
+      i = i+1 
+    }
+  }
+  
+  tabelaVolumeMaterialCategoria <- matrix(quantidadeVendidaMaterialCategoria,ncol=tamanhoMateriais,byrow=TRUE)
+  colnames(tabelaVolumeMaterialCategoria) <- materiais
+  rownames(tabelaVolumeMaterialCategoria) <- categorias
+  tabelaVolumeMaterialCategoria <- as.table(tabelaVolumeMaterialCategoria)
+  kable(tabelaVolumeMaterialCategoria)
+```
+
+Essa tabela mostra a relação entre os produtos vendidos e o material. Os resultados dispostos mostram quais são os **materiais mais adequados para produzir um determinado produto**.
